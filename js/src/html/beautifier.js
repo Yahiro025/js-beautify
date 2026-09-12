@@ -832,15 +832,16 @@ Beautifier.prototype._do_optional_end_element = function(parser_token) {
     return;
   }
 
-  // Optional-end rules are HTML-only; never pop a Handlebars helper of the same name.
-  var try_pop_html = function(tag, stop_list) {
-    return this._tag_stack.try_pop(tag, stop_list, '<');
-  }.bind(this);
-
   if (parser_token.is_empty_element || !parser_token.is_start_tag || !parser_token.parent) {
     return;
 
   }
+
+  // Optional-end rules are HTML-only; never pop a Handlebars helper of the same name.
+  var tag_stack = this._tag_stack;
+  var try_pop_html = function(tag, stop_list) {
+    return tag_stack.try_pop(tag, stop_list, '<');
+  };
 
   if (parser_token.tag_name === 'body') {
     // A head element’s end tag may be omitted if the head element is not immediately followed by a space character or a comment.

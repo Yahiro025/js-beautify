@@ -1793,6 +1793,7 @@ exports.test_data = {
   }, {
     name: "Issue #2045 - Handlebars helpers must not be treated as HTML tags",
     description: "Helpers whose names match HTML tags (tr, p, table, ...) keep nested indent; real HTML table tags still indent correctly",
+    template: "^^^ $$$",
     options: [
       { name: "indent_handlebars", value: "true" }
     ],
