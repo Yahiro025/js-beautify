@@ -1881,6 +1881,42 @@ exports.test_data = {
           '</table>'
         ]
       }, {
+        comment: "HTML <div> inside {{#p}} must not close the HTML <p> or discard the helper",
+        input_: [
+          '<p>',
+          '{{#p}}',
+          '<div>x</div>',
+          '{{/p}}',
+          '</p>'
+        ],
+        output: [
+          '<p>',
+          '    {{#p}}',
+          '        <div>x</div>',
+          '    {{/p}}',
+          '</p>'
+        ]
+      }, {
+        comment: "HTML <li> inside {{#li}} must not pop the outer list item",
+        input_: [
+          '<ul>',
+          '<li>',
+          '{{#li}}',
+          '<li>inner</li>',
+          '{{/li}}',
+          '</li>',
+          '</ul>'
+        ],
+        output: [
+          '<ul>',
+          '    <li>',
+          '        {{#li}}',
+          '            <li>inner</li>',
+          '        {{/li}}',
+          '    </li>',
+          '</ul>'
+        ]
+      }, {
         comment: "HTML <tr> inside {{#tr}} must not pop the Handlebars helper from the tag stack",
         input_: [
           '<table>',

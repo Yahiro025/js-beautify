@@ -222,10 +222,18 @@ TagStack.prototype._frame_matches_kind = function(frame, tag_start_char) {
   return !tag_start_char || !frame.tag_start_char || frame.tag_start_char === tag_start_char;
 };
 
-TagStack.prototype._get_frame = function(tag_list, stop_list, tag_start_char) { //function to retrieve the opening tag to the corresponding closer
+TagStack.prototype._get_frame = function(tag_list, stop_list, tag_start_char, stop_other_kind) { //function to retrieve the opening tag to the corresponding closer
   var frame = this._current_frame;
 
   while (frame) { //till we reach '' (the initial value);
+    // Optional-end pops must not walk through a same-name tag of the other
+    // kind. Popping an HTML ancestor would discard the Handlebars helper
+    // stacked above it ({{#tr}} vs <tr>, {{#li}} vs <li>).
+    if (stop_other_kind && tag_start_char && frame.tag_start_char &&
+      frame.tag_start_char !== tag_start_char && tag_list.indexOf(frame.tag) !== -1) {
+      frame = null;
+      break;
+    }
     if (this._frame_matches_kind(frame, tag_start_char) && tag_list.indexOf(frame.tag) !== -1) { //if this is it use it
       break;
     } else if (this._frame_matches_kind(frame, tag_start_char) && stop_list && stop_list.indexOf(frame.tag) !== -1) {
@@ -238,8 +246,8 @@ TagStack.prototype._get_frame = function(tag_list, stop_list, tag_start_char) { 
   return frame;
 };
 
-TagStack.prototype.try_pop = function(tag, stop_list, tag_start_char) { //function to retrieve the opening tag to the corresponding closer
-  var frame = this._get_frame([tag], stop_list, tag_start_char);
+TagStack.prototype.try_pop = function(tag, stop_list, tag_start_char, stop_other_kind) { //function to retrieve the opening tag to the corresponding closer
+  var frame = this._get_frame([tag], stop_list, tag_start_char, stop_other_kind);
   return this._try_pop_frame(frame);
 };
 
@@ -840,7 +848,7 @@ Beautifier.prototype._do_optional_end_element = function(parser_token) {
   // Optional-end rules are HTML-only; never pop a Handlebars helper of the same name.
   var tag_stack = this._tag_stack;
   var try_pop_html = function(tag, stop_list) {
-    return tag_stack.try_pop(tag, stop_list, '<');
+    return tag_stack.try_pop(tag, stop_list, '<', true);
   };
 
   if (parser_token.tag_name === 'body') {
@@ -861,7 +869,7 @@ Beautifier.prototype._do_optional_end_element = function(parser_token) {
     result = result || try_pop_html('dd', ['dl']);
 
 
-  } else if (parser_token.parent.tag_name === 'p' && p_closers.indexOf(parser_token.tag_name) !== -1) {
+  } else if (parser_token.parent.tag_start_char === '<' && parser_token.parent.tag_name === 'p' && p_closers.indexOf(parser_token.tag_name) !== -1) {
     // IMPORTANT: this else-if works because p_closers has no overlap with any other element we look for in this method
     // check for the parent element is an HTML element that is not an <a>, <audio>, <del>, <ins>, <map>, <noscript>, or <video> element,  or an autonomous custom element.
     // To do this right, this needs to be coded as an inclusion of the inverse of the exclusion above.
