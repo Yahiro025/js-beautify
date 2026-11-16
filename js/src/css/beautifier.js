@@ -187,6 +187,7 @@ Beautifier.prototype.beautify = function() {
 
   this._ch = null;
   var parenLevel = 0;
+  var attributeLevel = 0;
 
   var insideRule = false;
   // This is the value side of a property value pair (blue in the following ex)
@@ -501,8 +502,8 @@ Beautifier.prototype.beautify = function() {
         this._output.space_before_token = true;
       }
     } else if ((this._ch === '>' || this._ch === '+' || this._ch === '~') && !insidePropertyValue && parenLevel === 0) {
-      //handle combinator spacing
-      if (this._options.space_around_combinator) {
+      // ~= inside [] is an attribute operator, not a sibling combinator.
+      if (this._options.space_around_combinator && !(this._ch === '~' && attributeLevel > 0)) {
         this._output.space_before_token = true;
         this.print_string(this._ch);
         this._output.space_before_token = true;
@@ -515,8 +516,12 @@ Beautifier.prototype.beautify = function() {
         }
       }
     } else if (this._ch === ']') {
+      if (attributeLevel > 0) {
+        attributeLevel--;
+      }
       this.print_string(this._ch);
     } else if (this._ch === '[') {
+      attributeLevel++;
       this.preserveSingleSpace(isAfterSpace);
       this.print_string(this._ch);
     } else if (this._ch === '=') { // no whitespace before or after

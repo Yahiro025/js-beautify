@@ -271,6 +271,27 @@ exports.test_data = {
             '    width: calc(100% + 45px);',
             '}'
           ]
+        },
+        {
+          comment: 'Issue #2052: ~= inside an attribute selector is not a combinator',
+          input: '.foo[class~="bar"]{color:red;}',
+          output: [
+            '.foo[class~="bar"] {',
+            '    color: red;',
+            '}'
+          ]
+        },
+        {
+          input: '.foo[class ~= "bar"]{}',
+          output: '.foo[class~="bar"] {}'
+        },
+        {
+          input: 'a~b[class~="bar"]{}',
+          output: 'a{{space}}~{{space}}b[class~="bar"] {}'
+        },
+        {
+          input: 'header>div[class~="div-all"]{}',
+          output: 'header{{space}}>{{space}}div[class~="div-all"] {}'
         }
       ]
     }, {

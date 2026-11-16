@@ -206,6 +206,7 @@ class Beautifier:
 
         self._ch = None
         parenLevel = 0
+        attributeLevel = 0
 
         insideRule = False
         insidePropertyValue = False
@@ -516,8 +517,10 @@ class Beautifier:
                 and not insidePropertyValue
                 and parenLevel == 0
             ):
-                # handle combinator spacing
-                if self._options.space_around_combinator:
+                # ~= inside [] is an attribute operator, not a sibling combinator.
+                if self._options.space_around_combinator and not (
+                    self._ch == "~" and attributeLevel > 0
+                ):
                     self._output.space_before_token = True
                     self.print_string(self._ch)
                     self._output.space_before_token = True
@@ -528,8 +531,11 @@ class Beautifier:
                     if self._ch and bool(whitespaceChar.search(self._ch)):
                         self._ch = ""
             elif self._ch == "]":
+                if attributeLevel > 0:
+                    attributeLevel -= 1
                 self.print_string(self._ch)
             elif self._ch == "[":
+                attributeLevel += 1
                 self.preserveSingleSpace(isAfterSpace)
                 self.print_string(self._ch)
             elif self._ch == "=":
